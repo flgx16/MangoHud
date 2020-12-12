@@ -34,6 +34,7 @@ typedef unsigned long KeySym;
    OVERLAY_PARAM_BOOL(cpu_stats)                     \
    OVERLAY_PARAM_BOOL(gpu_stats)                     \
    OVERLAY_PARAM_BOOL(ram)                           \
+   OVERLAY_PARAM_BOOL(swap)                          \
    OVERLAY_PARAM_BOOL(vram)                          \
    OVERLAY_PARAM_BOOL(time)                          \
    OVERLAY_PARAM_BOOL(full)                          \
@@ -97,6 +98,7 @@ typedef unsigned long KeySym;
    OVERLAY_PARAM_CUSTOM(gpu_color)                   \
    OVERLAY_PARAM_CUSTOM(vram_color)                  \
    OVERLAY_PARAM_CUSTOM(ram_color)                   \
+   OVERLAY_PARAM_CUSTOM(swap_color)                  \
    OVERLAY_PARAM_CUSTOM(engine_color)                \
    OVERLAY_PARAM_CUSTOM(frametime_color)             \
    OVERLAY_PARAM_CUSTOM(background_color)            \
@@ -184,7 +186,7 @@ struct overlay_params {
    unsigned vsync;
    int gl_vsync;
    uint64_t log_duration;
-   unsigned cpu_color, gpu_color, vram_color, ram_color, engine_color, io_color, frametime_color, background_color, text_color, wine_color;
+   unsigned cpu_color, gpu_color, vram_color, ram_color, swap_color, engine_color, io_color, frametime_color, background_color, text_color, wine_color;
    std::vector<unsigned> gpu_load_color;
    std::vector<unsigned> cpu_load_color;
    std::vector<unsigned> gpu_load_value;

@@ -31,6 +31,7 @@ class HudElements{
         static void io_stats();
         static void vram();
         static void ram();
+        static void swap();
         static void fps();
         static void engine_version();
         static void gpu_name();
@@ -53,6 +54,7 @@ class HudElements{
                 gpu,
                 vram,
                 ram,
+                swap,
                 engine,
                 io,
                 frametime,

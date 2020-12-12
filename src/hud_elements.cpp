@@ -58,6 +58,7 @@ void HudElements::convert_colors(struct overlay_params& params)
     HUDElements.colors.gpu = convert(params.gpu_color);
     HUDElements.colors.vram = convert(params.vram_color);
     HUDElements.colors.ram = convert(params.ram_color);
+    HUDElements.colors.swap = convert(params.swap_color);
     HUDElements.colors.engine = convert(params.engine_color);
     HUDElements.colors.io = convert(params.io_color);
     HUDElements.colors.frametime = convert(params.frametime_color);
@@ -320,15 +321,39 @@ void HudElements::vram(){
 void HudElements::ram(){
 #ifdef __gnu_linux__
     if (HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_ram]){
-         ImGui::TableNextRow();
-         ImGui::TextColored(HUDElements.colors.ram, "RAM");
-         ImGui::TableNextCell();
-         right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%.1f", memused);
-         ImGui::SameLine(0,1.0f);
-         ImGui::PushFont(HUDElements.sw_stats->font1);
-         ImGui::Text("GiB");
-         ImGui::PopFont();
-      }
+        ImGui::TableNextRow();
+        ImGui::TextColored(HUDElements.colors.ram, "RAM");
+        ImGui::TableNextCell();
+        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%.1f", memused);
+        ImGui::SameLine(0,1.0f);
+        ImGui::PushFont(HUDElements.sw_stats->font1);
+        ImGui::Text("GiB");
+        ImGui::PopFont();
+    }
+
+    if (HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_swap] && HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_ram]){
+        ImGui::TableNextCell();
+        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%.1f", swapused);
+        ImGui::SameLine(0,1.0f);
+        ImGui::PushFont(HUDElements.sw_stats->font1);
+        ImGui::Text("GiB");
+        ImGui::PopFont();
+    }
+#endif
+}
+
+void HudElements::swap() {
+#ifdef __gnu_linux__
+    if (HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_swap] && !HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_ram]){
+        ImGui::TableNextRow();
+        ImGui::TextColored(HUDElements.colors.swap, "SWAP");
+        ImGui::TableNextCell();
+        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%.1f", swapused);
+        ImGui::SameLine(0,1.0f);
+        ImGui::PushFont(HUDElements.sw_stats->font1);
+        ImGui::Text("GiB");
+        ImGui::PopFont();
+    }
 #endif
 }
 
@@ -667,6 +692,7 @@ void HudElements::sort_elements(std::pair<std::string, std::string> option){
     if (param == "io_stats")        { ordered_functions.push_back({io_stats, value});               }
     if (param == "vram")            { ordered_functions.push_back({vram, value});                   }
     if (param == "ram")             { ordered_functions.push_back({ram, value});                    }
+    if (param == "swap")            { ordered_functions.push_back({swap, value});                   }
     if (param == "fps")             { ordered_functions.push_back({fps, value});                    }
     if (param == "engine_version")  { ordered_functions.push_back({engine_version, value});         }
     if (param == "gpu_name")        { ordered_functions.push_back({gpu_name, value});               }
@@ -705,6 +731,7 @@ void HudElements::legacy_elements(){
     ordered_functions.push_back({io_stats,           value});
     ordered_functions.push_back({vram,               value});
     ordered_functions.push_back({ram,                value});
+    ordered_functions.push_back({swap,               value});
     ordered_functions.push_back({fps,                value});
     ordered_functions.push_back({engine_version,     value});
     ordered_functions.push_back({gpu_name,           value});

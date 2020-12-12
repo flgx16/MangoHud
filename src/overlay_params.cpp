@@ -385,6 +385,7 @@ parse_font_glyph_ranges(const char *str)
 #define parse_gpu_color(s) parse_color(s)
 #define parse_vram_color(s) parse_color(s)
 #define parse_ram_color(s) parse_color(s)
+#define parse_swap_color(s) parse_color(s)
 #define parse_engine_color(s) parse_color(s)
 #define parse_io_color(s) parse_color(s)
 #define parse_frametime_color(s) parse_color(s)
@@ -533,6 +534,7 @@ parse_overlay_config(struct overlay_params *params,
    params->enabled[OVERLAY_PARAM_ENABLED_cpu_stats] = true;
    params->enabled[OVERLAY_PARAM_ENABLED_gpu_stats] = true;
    params->enabled[OVERLAY_PARAM_ENABLED_ram] = false;
+   params->enabled[OVERLAY_PARAM_ENABLED_swap] = false;
    params->enabled[OVERLAY_PARAM_ENABLED_vram] = false;
    params->enabled[OVERLAY_PARAM_ENABLED_read_cfg] = false;
    params->enabled[OVERLAY_PARAM_ENABLED_io_read] = false;
@@ -560,6 +562,7 @@ parse_overlay_config(struct overlay_params *params,
    params->cpu_color = 0x2e97cb;
    params->vram_color = 0xad64c1;
    params->ram_color = 0xc26693;
+   params->swap_color = 0xc25674;
    params->engine_color = 0xeb5b5b;
    params->io_color = 0xa491d3;
    params->frametime_color = 0x00ff00;
@@ -658,11 +661,12 @@ parse_overlay_config(struct overlay_params *params,
       params->font_scale_media_player = 0.55f;
 
    // Convert from 0xRRGGBB to ImGui's format
-   std::array<unsigned *, 20> colors = {
+   std::array<unsigned *, 21> colors = {
       &params->cpu_color,
       &params->gpu_color,
       &params->vram_color,
       &params->ram_color,
+      &params->swap_color,
       &params->engine_color,
       &params->io_color,
       &params->background_color,
