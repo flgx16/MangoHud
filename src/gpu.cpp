@@ -1,5 +1,12 @@
 #include "gpu.h"
 #include <inttypes.h>
+
+#include <sys/ioctl.h>
+#include <libdrm/amdgpu_drm.h>
+
+#include <errno.h>
+#include <string.h>
+
 #include "nvctrl.h"
 #ifdef HAVE_NVML
 #include "nvidia_info.h"
@@ -7,6 +14,7 @@
 
 struct gpuInfo gpu_info;
 amdgpu_files amdgpu {};
+int amdgpuFD = -1;
 
 bool checkNvidia(const char *pci_dev){
     bool nvSuccess = false;
@@ -56,7 +64,48 @@ nvapi_util();
 #endif
 }
 
-void getAmdGpuInfo(){
+bool getAmdGpuIOCTLValue(unsigned int query, unsigned int return_size, void* return_pointer) {
+    struct drm_amdgpu_info requestBuffer = {};
+    requestBuffer.query = query;
+    requestBuffer.return_size = return_size;
+    requestBuffer.return_pointer = reinterpret_cast<uint64_t>(return_pointer);
+    
+    int result = ioctl(amdgpuFD, DRM_IOCTL_AMDGPU_INFO, &requestBuffer);
+    if (result < 0) printf("%s\n", strerror(errno));
+
+    return result == 0;
+}
+
+bool getAmdGpuIOCTLSensorValue(unsigned int sensor, unsigned int return_size, void* return_pointer) {
+    struct drm_amdgpu_info requestBuffer = {};
+    requestBuffer.query = AMDGPU_INFO_SENSOR;
+    requestBuffer.return_size = return_size;
+    requestBuffer.return_pointer = reinterpret_cast<uint64_t>(return_pointer);
+    requestBuffer.sensor_info.type = sensor;
+    
+    int result = ioctl(amdgpuFD, DRM_IOCTL_AMDGPU_INFO, &requestBuffer);
+    if (result < 0) printf("%s\n", strerror(errno));
+
+    return result == 0;
+}
+
+void getAmdGpuIOCTLInfo(){
+    getAmdGpuIOCTLSensorValue(AMDGPU_INFO_SENSOR_GPU_LOAD, sizeof(gpu_info.load), &gpu_info.load);
+
+    int temp = 0;
+    getAmdGpuIOCTLSensorValue(AMDGPU_INFO_SENSOR_GPU_TEMP, sizeof(temp), &temp);
+    gpu_info.temp = temp / 1000;
+
+    getAmdGpuIOCTLSensorValue(AMDGPU_INFO_SENSOR_GFX_SCLK, sizeof(gpu_info.CoreClock), &gpu_info.CoreClock);
+
+    int power = 0;
+    getAmdGpuIOCTLSensorValue(AMDGPU_INFO_SENSOR_GPU_AVG_POWER, sizeof(power), &power);
+    gpu_info.powerUsage = power / 1000;
+
+    getAmdGpuIOCTLSensorValue(AMDGPU_INFO_SENSOR_GFX_MCLK, sizeof(gpu_info.MemClock), &gpu_info.MemClock);
+}
+
+void getAmdGpuSysFSInfo(){
     if (amdgpu.busy) {
         rewind(amdgpu.busy);
         fflush(amdgpu.busy);
@@ -118,5 +167,13 @@ void getAmdGpuInfo(){
             value = 0;
 
         gpu_info.powerUsage = value / 1000000;
+    }
+}
+
+void getAmdGpuInfo(){
+    if (amdgpuFD < 0) {
+        getAmdGpuSysFSInfo();
+    } else {
+        getAmdGpuIOCTLInfo();
     }
 }

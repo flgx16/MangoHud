@@ -36,6 +36,8 @@
 #ifdef __gnu_linux__
 #include <libgen.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #endif
 
 #include <vulkan/vulkan.h>
@@ -560,32 +562,40 @@ void init_gpu_stats(uint32_t& vendorID, overlay_params& params)
            std::cerr << "using amdgpu path: " << path << std::endl;
 #endif
 
-         if (!amdgpu.busy)
-            amdgpu.busy = fopen((path + "/gpu_busy_percent").c_str(), "r");
-         if (!amdgpu.vram_total)
-            amdgpu.vram_total = fopen((path + "/mem_info_vram_total").c_str(), "r");
-         if (!amdgpu.vram_used)
-            amdgpu.vram_used = fopen((path + "/mem_info_vram_used").c_str(), "r");
+         #ifdef __gnu_linux__
+         amdgpuFD = open("/dev/dri/renderD128", O_RDONLY | O_NONBLOCK);
+         printf("%s\n", (path + "/device").c_str());
+         if (amdgpuFD < 0) {
+         #endif // __gnu_linux__
+            if (!amdgpu.busy)
+               amdgpu.busy = fopen((path + "/gpu_busy_percent").c_str(), "r");
+            if (!amdgpu.vram_total)
+               amdgpu.vram_total = fopen((path + "/mem_info_vram_total").c_str(), "r");
+            if (!amdgpu.vram_used)
+               amdgpu.vram_used = fopen((path + "/mem_info_vram_used").c_str(), "r");
 
-         path += "/hwmon/";
-         string tempFolder;
-         if (find_folder(path, "hwmon", tempFolder)) {
-            if (!amdgpu.core_clock)
-               amdgpu.core_clock = fopen((path + tempFolder + "/freq1_input").c_str(), "r");
-            if (!amdgpu.memory_clock)
-               amdgpu.memory_clock = fopen((path + tempFolder + "/freq2_input").c_str(), "r");
-            if (!amdgpu.temp)
-               amdgpu.temp = fopen((path + tempFolder + "/temp1_input").c_str(), "r");
-            if (!amdgpu.power_usage)
-               amdgpu.power_usage = fopen((path + tempFolder + "/power1_average").c_str(), "r");
+            path += "/hwmon/";
+            string tempFolder;
+            if (find_folder(path, "hwmon", tempFolder)) {
+               if (!amdgpu.core_clock)
+                  amdgpu.core_clock = fopen((path + tempFolder + "/freq1_input").c_str(), "r");
+               if (!amdgpu.memory_clock)
+                  amdgpu.memory_clock = fopen((path + tempFolder + "/freq2_input").c_str(), "r");
+               if (!amdgpu.temp)
+                  amdgpu.temp = fopen((path + tempFolder + "/temp1_input").c_str(), "r");
+               if (!amdgpu.power_usage)
+                  amdgpu.power_usage = fopen((path + tempFolder + "/power1_average").c_str(), "r");
 
-            vendorID = 0x1002;
-            break;
+               vendorID = 0x1002;
+               break;
+            }
+         #ifdef __gnu_linux__
          }
+         #endif // __gnu_linux__
       }
 
       // don't bother then
-      if (!amdgpu.busy && !amdgpu.temp && !amdgpu.vram_total && !amdgpu.vram_used) {
+      if (amdgpuFD < 0 && !amdgpu.busy && !amdgpu.temp && !amdgpu.vram_total && !amdgpu.vram_used) {
          params.enabled[OVERLAY_PARAM_ENABLED_gpu_stats] = false;
       }
    }

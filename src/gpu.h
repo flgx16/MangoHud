@@ -16,6 +16,7 @@ struct amdgpu_files
 };
 
 extern amdgpu_files amdgpu;
+extern int amdgpuFD;
 
 struct gpuInfo{
     int load;
